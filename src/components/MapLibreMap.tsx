@@ -4,7 +4,7 @@
  * Supports route polyline, markers, and live driver tracking
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import maplibregl from 'maplibre-gl';
 import polyline from '@mapbox/polyline';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -388,7 +388,20 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
   const driverMarkerRef = useRef<maplibregl.Marker | null>(null);
   const etaBubbleRef = useRef<maplibregl.Marker | null>(null);
   const arrivalCardRef = useRef<maplibregl.Marker | null>(null);
+  const storeMarkerRef = useRef<maplibregl.Marker | null>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
+
+  // Nearby driver updates replace the markers array frequently. Keep the
+  // route anchors as primitive keys so route decorations are only rebuilt when
+  // pickup/dropoff coordinates actually change.
+  const pickupMarkerKey = useMemo(() => {
+    const marker = markers.find((item) => item.type === 'pickup');
+    return marker ? `${marker.lat},${marker.lng}` : null;
+  }, [markers]);
+  const dropoffMarkerKey = useMemo(() => {
+    const marker = markers.find((item) => item.type === 'dropoff');
+    return marker ? `${marker.lat},${marker.lng}` : null;
+  }, [markers]);
   const [mapError, setMapError] = useState<string | null>(null);
 
   // Initialize map
@@ -654,13 +667,11 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
     // deterministic regardless of which end the backend encoded the polyline
     // from. Fall back to the first polyline vertex only if no pickup marker.
     try {
-      const pickupMarker = markers.find(m => m.type === 'pickup');
       let lat: number | undefined;
       let lng: number | undefined;
 
-      if (pickupMarker) {
-        lat = pickupMarker.lat;
-        lng = pickupMarker.lng;
+      if (pickupMarkerKey) {
+        [lat, lng] = pickupMarkerKey.split(',').map(Number) as [number, number];
       } else if (encodedPolyline) {
         const decoded = polyline.decode(encodedPolyline);
         if (decoded.length > 0) {
@@ -677,7 +688,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
     } catch (e) {
       console.error('ETA bubble placement error', e);
     }
-  }, [pickupEta, encodedPolyline, markers, isMapLoaded]);
+  }, [pickupEta, encodedPolyline, pickupMarkerKey, isMapLoaded]);
 
   // Update arrival card
   useEffect(() => {
@@ -695,13 +706,11 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
     // destination regardless of polyline vertex order. Fall back to the last
     // polyline vertex only if no dropoff marker is present.
     try {
-      const dropoffMarker = markers.find(m => m.type === 'dropoff');
       let lat: number | undefined;
       let lng: number | undefined;
 
-      if (dropoffMarker) {
-        lat = dropoffMarker.lat;
-        lng = dropoffMarker.lng;
+      if (dropoffMarkerKey) {
+        [lat, lng] = dropoffMarkerKey.split(',').map(Number) as [number, number];
       } else if (encodedPolyline) {
         const decoded = polyline.decode(encodedPolyline);
         if (decoded.length > 0) {
@@ -718,7 +727,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
     } catch (e) {
       console.error('Arrival card placement error', e);
     }
-  }, [arrivalTime, encodedPolyline, markers, isMapLoaded]);
+  }, [arrivalTime, encodedPolyline, dropoffMarkerKey, isMapLoaded]);
 
   // Add store marker
   useEffect(() => {

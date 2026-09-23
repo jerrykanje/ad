@@ -45,6 +45,13 @@ interface GeoapifyResponse {
 // Cache for recent addresses (persisted to localStorage)
 const RECENT_ADDRESSES_KEY = 'ALETWENDE_RECENT_ADDRESSES';
 const MAX_RECENT_ADDRESSES = 10;
+export const RECENT_ADDRESSES_UPDATED_EVENT = 'recentAddressesUpdated';
+
+const notifyRecentAddressesUpdated = () => {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new Event(RECENT_ADDRESSES_UPDATED_EVENT));
+  }
+};
 
 /**
  * Get recent addresses from localStorage
@@ -70,9 +77,10 @@ export const saveRecentAddress = (address: GeoapifyAddress): void => {
     const filtered = recent.filter(a => a.id !== address.id);
     filtered.unshift(address);
     const trimmed = filtered.slice(0, MAX_RECENT_ADDRESSES);
-    localStorage.setItem(RECENT_ADDRESSES_KEY, JSON.stringify(trimmed));
+      localStorage.setItem(RECENT_ADDRESSES_KEY, JSON.stringify(trimmed));
+      notifyRecentAddressesUpdated();
 
-    const user = auth.currentUser;
+      const user = auth.currentUser;
     if (user) {
       void setDoc(
         doc(db, 'users', user.uid),
@@ -95,6 +103,7 @@ export const reconcileRecentAddresses = async (userId: string): Promise<Geoapify
         (address, index, addresses) => addresses.findIndex(item => item.id === address.id) === index
       ).slice(0, MAX_RECENT_ADDRESSES);
       localStorage.setItem(RECENT_ADDRESSES_KEY, JSON.stringify(merged));
+      notifyRecentAddressesUpdated();
       if (JSON.stringify(merged) !== JSON.stringify(remote)) {
         await setDoc(doc(db, 'users', userId), { recentAddresses: merged }, { merge: true });
       }

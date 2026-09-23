@@ -6,7 +6,7 @@ import { DraggablePanel } from '../components/DraggablePanel';
 import { ScrollableSection } from '../components/ScrollableSection';
 import { BottomNavigation } from '../components/BottomNavigation';
 import { MapLibreMap } from '../components/MapLibreMap';
-import { getRecentAddresses, reverseGeocode, GeoapifyAddress } from '../services/geoapifyService';
+import { getRecentAddresses, reverseGeocode, GeoapifyAddress, RECENT_ADDRESSES_UPDATED_EVENT } from '../services/geoapifyService';
 import { useRideContext } from '../contexts/RideContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useNearbyDrivers, LUSAKA_DEFAULT } from '../hooks/useNearbyDrivers';
@@ -38,7 +38,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onSearchSelect }) => {
   useEffect(() => {
     const handleStorage = () => setRecentAddresses(getRecentAddresses());
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    window.addEventListener(RECENT_ADDRESSES_UPDATED_EVENT, handleStorage);
+    return () => {
+      window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(RECENT_ADDRESSES_UPDATED_EVENT, handleStorage);
+    };
   }, []);
 
   const handleNavigationBlock = (destination: string) => {

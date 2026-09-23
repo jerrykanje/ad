@@ -11,7 +11,8 @@ import {
   getRecentAddresses, 
   saveRecentAddress, 
   reverseGeocode,
-  GeoapifyAddress 
+  GeoapifyAddress,
+  RECENT_ADDRESSES_UPDATED_EVENT
 } from '../services/geoapifyService';
 
 interface YourRouteProps {
@@ -58,7 +59,14 @@ export const YourRoute: React.FC<YourRouteProps> = ({ onRouteComplete }) => {
 
   // Load recent addresses on mount
   useEffect(() => {
-    setSuggestions(getRecentAddresses());
+    const refreshRecentAddresses = () => setSuggestions(getRecentAddresses());
+    refreshRecentAddresses();
+    window.addEventListener('storage', refreshRecentAddresses);
+    window.addEventListener(RECENT_ADDRESSES_UPDATED_EVENT, refreshRecentAddresses);
+    return () => {
+      window.removeEventListener('storage', refreshRecentAddresses);
+      window.removeEventListener(RECENT_ADDRESSES_UPDATED_EVENT, refreshRecentAddresses);
+    };
   }, []);
 
   useEffect(() => {
