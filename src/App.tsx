@@ -12,6 +12,7 @@ import { Rides } from './pages/Rides';
 import { Account } from './pages/Account';
 import { PersonalInfo } from './pages/PersonalInfo';
 import { LoginSecurity } from './pages/LoginSecurity';
+import { SavedPlacePage } from './pages/SavedPlace';
 import { SelectRide } from './pages/SelectRide';
 import { ConfirmOrder } from './pages/ConfirmOrder';
 import { WaitingForDriver } from './pages/WaitingForDriver';
@@ -324,10 +325,14 @@ function AppContent({ userId }: { userId: string }) {
                 path="/personal-info"
                 element={<PageTransition><PersonalInfo /></PageTransition>}
               />
-              <Route
-                path="/login-security"
-                element={<PageTransition><LoginSecurity /></PageTransition>}
-              />
+  <Route
+  path="/login-security"
+  element={<PageTransition><LoginSecurity /></PageTransition>}
+  />
+  <Route
+  path="/saved-place"
+  element={<PageTransition><SavedPlacePage /></PageTransition>}
+  />
               <Route
                 path="/schedule-ride"
                 element={<PageTransition><ScheduleRide /></PageTransition>}

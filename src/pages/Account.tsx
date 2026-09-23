@@ -25,6 +25,7 @@ import { BottomNavigation } from '../components/BottomNavigation';
 import { ScrollableSection } from '../components/ScrollableSection';
 import { useUserProfile } from '../hooks/useUserProfile';
 import { useTheme } from '../contexts/ThemeContext';
+import { SavedPlace, SavedPlaces } from '../types';
 
 export const Account: React.FC = () => {
   const navigate = useNavigate();
@@ -46,6 +47,11 @@ export const Account: React.FC = () => {
     rating: 4.55
   };
 
+  const savedPlaces = profile?.savedPlaces || { custom: [] };
+  const openSavedPlace = (mode: 'home' | 'work' | 'custom', place?: SavedPlace) => {
+    navigate('/saved-place', { state: { mode, place, savedPlaces } });
+  };
+
   const accountSections = [
     {
       title: 'Account',
@@ -60,9 +66,10 @@ export const Account: React.FC = () => {
     {
       title: 'Saved places',
       items: [
-        { icon: HomeIcon, label: 'Enter home location', action: () => {} },
-        { icon: Briefcase, label: 'Enter work location', action: () => {} },
-        { icon: Plus, label: 'Add a place', action: () => {} }
+        { icon: HomeIcon, label: savedPlaces.home?.address || 'Enter home location', subtitle: savedPlaces.home ? 'Home' : undefined, action: () => openSavedPlace('home', savedPlaces.home) },
+        { icon: Briefcase, label: savedPlaces.work?.address || 'Enter work location', subtitle: savedPlaces.work ? 'Work' : undefined, action: () => openSavedPlace('work', savedPlaces.work) },
+        ...(savedPlaces.custom.length < 6 ? [{ icon: Plus, label: 'Add a place', action: () => openSavedPlace('custom') }] : []),
+        ...savedPlaces.custom.map(place => ({ icon: MapPin, label: place.address, subtitle: place.title, action: () => openSavedPlace('custom', place) }))
       ]
     },
     {

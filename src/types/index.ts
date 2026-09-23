@@ -53,12 +53,27 @@ export interface RecentSearch {
   description: string;
 }
 
+export interface SavedPlace {
+  id?: string;
+  title: string;
+  address: string;
+  lat: number;
+  lng: number;
+}
+
+export interface SavedPlaces {
+  home?: SavedPlace;
+  work?: SavedPlace;
+  custom: SavedPlace[];
+}
+
 export interface UserProfile {
   id: string;
   name: string;
   phone: string;
   email: string;
   profilePicture?: string;
+  savedPlaces?: SavedPlaces;
   createdAt: number;
   updatedAt: number;
 }
